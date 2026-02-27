@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: findinmycity
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: findinmycity
+  template:
+    metadata:
+      labels:
+        app: findinmycity
+    spec:
+      containers:
+        - name: findinmycity
+          image: findinmycity-app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4200
