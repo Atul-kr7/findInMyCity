@@ -1,23 +1,53 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = "yourdockerhubusername/findinmycity"
+        TAG = "${BUILD_NUMBER}"
+    }
+
     stages {
+
         stage('Clone') {
             steps {
-                git 'https://github.com/Atul-kr7/findInMyCity.git'
+                checkout scm
             }
         }
 
-        stage('Build') {
+        stage('Build App') {
             steps {
-                sh 'echo Building Project'
+                sh 'echo Building Application'
                 sh 'ls -la'
             }
         }
 
-        stage('Test') {
+        stage('Build Docker Image') {
             steps {
-                sh 'echo Testing Project'
+                sh 'docker build -t $DOCKER_IMAGE:$TAG .'
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker push $DOCKER_IMAGE:$TAG
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh '''
+                    kubectl set image deployment/findinmycity \
+                    findinmycity=$DOCKER_IMAGE:$TAG
+                '''
             }
         }
     }
