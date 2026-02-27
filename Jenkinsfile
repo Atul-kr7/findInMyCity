@@ -9,8 +9,8 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
-                git branch: 'feature/update',
-                    url: 'https://github.com/Atul-kr7/findInMyCity'
+                git branch: 'main',
+                    url: 'https://github.com/Atul-kr7/findInMyCity.git'
             }
         }
 
