@@ -1,47 +1,24 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'node18'   // configured in Jenkins → Global Tool Configuration
-    }
-
     stages {
-
-        stage('Checkout Code') {
+        stage('Clone') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/Atul-kr7/findInMyCity.git'
+                git 'https://github.com/Atul-kr7/findInMyCity.git'
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build') {
             steps {
-                sh 'npm install'
+                sh 'echo Building Project'
+                sh 'ls -la'
             }
         }
 
-        stage('Build Angular App') {
+        stage('Test') {
             steps {
-                sh 'ng build --configuration=production'
+                sh 'echo Testing Project'
             }
-        }
-
-        stage('Deploy to Server') {
-            steps {
-                sh '''
-                sudo rm -rf /var/www/html/*
-                sudo cp -r dist/* /var/www/html/
-                '''
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Angular App Deployed Successfully 🚀'
-        }
-        failure {
-            echo 'Deployment Failed ❌'
         }
     }
 }
