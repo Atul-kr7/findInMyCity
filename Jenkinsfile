@@ -2,39 +2,30 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "your-dockerhub-username/find-in-my-city"
+        IMAGE_NAME = "yourdockerhub/app"
         IMAGE_TAG = "${BUILD_NUMBER}"
-        DOCKER_CREDS = "dockerhub-creds-id"
-        SONARQUBE = "sonarqube-server"
+        DOCKER_CREDS = "docker-creds-id"
+        KUBECONFIG_CRED = "kubeconfig-id"
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('SOURCE') {
             steps {
                 checkout scm
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('BUILD') {
             steps {
-                withSonarQubeEnv("${SONARQUBE}") {
-                    sh """
-                    sonar-scanner \
-                      -Dsonar.projectKey=find-in-my-city \
-                      -Dsonar.sources=. \
-                      -Dsonar.host.url=$SONAR_HOST_URL \
-                      -Dsonar.login=$SONAR_AUTH_TOKEN
-                    """
-                }
+                sh 'npm install'
+                sh 'npm run build'
             }
         }
 
-        stage('Quality Gate') {
+        stage('TEST') {
             steps {
-                timeout(time: 2, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
+                sh 'npm test'
             }
         }
 
@@ -44,40 +35,75 @@ pipeline {
             }
         }
 
-        stage('Docker Scan') {
+        stage('Container Image Scan') {
             steps {
-                sh "docker scan $IMAGE_NAME:$IMAGE_TAG || true"
+                sh "trivy image --severity HIGH,CRITICAL $IMAGE_NAME:$IMAGE_TAG"
             }
         }
 
-        stage('Docker Push') {
+        stage('Push Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDS}", passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                withCredentials([usernamePassword(
+                    credentialsId: "${DOCKER_CREDS}",
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS'
+                )]) {
                     sh """
-                    echo $PASS | docker login -u $USER --password-stdin
-                    docker push $IMAGE_NAME:$IMAGE_TAG
+                        echo $PASS | docker login -u $USER --password-stdin
+                        docker push $IMAGE_NAME:$IMAGE_TAG
                     """
                 }
             }
         }
 
+        stage('Kubernetes Manifest Scan') {
+            steps {
+                sh "trivy config k8s/"
+                sh "kube-score score k8s/*.yaml"
+            }
+        }
+
         stage('Deploy to Kubernetes') {
             steps {
+                withCredentials([file(credentialsId: "${KUBECONFIG_CRED}", variable: 'KUBECONFIG')]) {
+                    sh """
+                        kubectl apply -f k8s/
+                        kubectl rollout status deployment/app
+                    """
+                }
+            }
+        }
+
+        stage('Cluster Security Scan') {
+            steps {
+                sh "kube-bench --version"
+                sh "kube-bench run --targets node,policies"
+            }
+        }
+
+        stage('Deploy Istio Resources') {
+            steps {
                 sh """
-                kubectl set image deployment/find-in-my-city \
-                find-in-my-city=$IMAGE_NAME:$IMAGE_TAG \
-                --record
+                    kubectl apply -f istio/gateway.yaml
+                    kubectl apply -f istio/virtualservice.yaml
+                    kubectl apply -f istio/destinationrule.yaml
                 """
+            }
+        }
+
+        stage('Istio Validation') {
+            steps {
+                sh "istioctl analyze"
             }
         }
     }
 
     post {
         success {
-            echo "Deployment Successful 🚀"
+            echo "Application deployed successfully with Kubernetes + Istio 🚀"
         }
         failure {
-            echo "Pipeline Failed ❌"
+            echo "Pipeline failed ❌"
         }
     }
 }
