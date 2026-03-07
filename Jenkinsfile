@@ -6,8 +6,8 @@ pipeline {
         IMAGE_TAG = "${BUILD_NUMBER}"
         DOCKER_CREDS = "docker-creds-id"
         KUBECONFIG_CRED = "kubeconfig-id"
-        PATH = "/Users/atul/.rd/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-        PATH = "/opt/homebrew/bin:/Users/atul/.rd/bin:/usr/local/bin:/usr/bin:/bin"
+        // PATH = "/Users/atul/.rd/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+        PATH = "/opt/homebrew/bin:/Users/atul/.rd/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     }
 
     stages {
