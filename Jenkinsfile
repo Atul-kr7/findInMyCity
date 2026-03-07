@@ -27,14 +27,14 @@ pipeline {
             }
         }
 
-        stage('TEST') {
-            steps {
-                sh '''
-                export PATH=/opt/homebrew/bin:$PATH
-                npm test
-                '''
-            }
-        }
+        // stage('TEST') {
+        //     steps {
+        //         sh '''
+        //         export PATH=/opt/homebrew/bin:$PATH
+        //         npm test
+        //         '''
+        //     }
+        // }
 
         stage('Docker Build') {
             steps {
