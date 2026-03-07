@@ -18,8 +18,7 @@ pipeline {
 
         stage('BUILD') {
             steps {
-                sh 'npm install'
-                sh 'npm run build'
+                sh '/opt/homebrew/bin/npm install'
             }
         }
 
