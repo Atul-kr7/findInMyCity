@@ -7,6 +7,7 @@ pipeline {
         DOCKER_CREDS = "docker-creds-id"
         KUBECONFIG_CRED = "kubeconfig-id"
         PATH = "/Users/atul/.rd/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+        PATH = "/opt/homebrew/bin:/Users/atul/.rd/bin:/usr/local/bin:/usr/bin:/bin"
     }
 
     stages {
@@ -45,7 +46,7 @@ pipeline {
 
         stage('Container Image Scan') {
             steps {
-                sh "trivy image --severity HIGH,CRITICAL $IMAGE_NAME:$IMAGE_TAG"
+                sh 'trivy image --severity HIGH,CRITICAL yourdockerhub/app:16'
             }
         }
 
