@@ -16,12 +16,11 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('BUILD') {
             steps {
                 sh '/opt/homebrew/bin/npm install'
             }
         }
-}
 
         stage('TEST') {
             steps {
