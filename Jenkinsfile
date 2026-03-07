@@ -18,7 +18,12 @@ pipeline {
 
         stage('BUILD') {
             steps {
-                sh '/opt/homebrew/bin/npm install'
+                sh '''
+                export PATH=/opt/homebrew/bin:$PATH
+                node -v
+                npm -v
+                npm install
+                '''
             }
         }
 
