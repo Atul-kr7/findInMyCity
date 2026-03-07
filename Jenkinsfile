@@ -46,7 +46,7 @@ pipeline {
 
         stage('Container Image Scan') {
             steps {
-                sh 'trivy image --severity HIGH,CRITICAL yourdockerhub/app:16'
+                sh 'trivy image --severity HIGH,CRITICAL findinmycity:5.0'
             }
         }
 
