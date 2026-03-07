@@ -6,6 +6,7 @@ pipeline {
         IMAGE_TAG = "${BUILD_NUMBER}"
         DOCKER_CREDS = "docker-creds-id"
         KUBECONFIG_CRED = "kubeconfig-id"
+        PATH = "/Users/atul/.rd/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     }
 
     stages {
@@ -38,7 +39,7 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t $IMAGE_NAME:$IMAGE_TAG ."
+                sh 'docker build -t yourdockerhub/app:14 .'
             }
         }
 
