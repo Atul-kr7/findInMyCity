@@ -9,7 +9,7 @@ RUN npm install
 COPY . .
 RUN npm run build -- --configuration production
 
-# ---------- Stage 2: Serve ----------
+# ---------- Stage 2: Serve --------------
 FROM nginx:alpine
 
 # Remove default nginx website
