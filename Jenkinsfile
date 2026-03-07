@@ -29,7 +29,10 @@ pipeline {
 
         stage('TEST') {
             steps {
-                sh 'npm test'
+                sh '''
+                export PATH=/opt/homebrew/bin:$PATH
+                npm test
+                '''
             }
         }
 
