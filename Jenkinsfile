@@ -54,11 +54,11 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: "${DOCKER_CREDS}",
-                    usernameVariable: 'USER',
-                    passwordVariable: 'PASS'
+                    usernameVariable: 'atulkr7',
+                    passwordVariable: 'AT@95041ul'
                 )]) {
                     sh """
-                        echo $PASS | docker login -u $USER --password-stdin
+                        echo $AT@95041ul | docker login -u $atulkr7 --password-stdin
                         docker push $IMAGE_NAME:$IMAGE_TAG
                     """
                 }
