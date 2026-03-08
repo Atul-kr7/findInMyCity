@@ -84,7 +84,8 @@ pipeline {
                 withCredentials([file(credentialsId: "${KUBECONFIG_CRED}", variable: 'KUBECONFIG')]) {
                     sh """
                         kubectl apply -f helm/
-                        kubectl rollout status deployment/findinmycity
+                        kubectl rollout status deployment/findinmycity --timeout=2m
+                        kubectl get pods -l app=findinmycity
                     """
                 }
             }
