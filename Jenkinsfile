@@ -59,7 +59,7 @@ pipeline {
                 )]) {
                     sh """
                         echo $AT@95041ul | docker login -u $atulkr7 --password-stdin
-                        docker push $IMAGE_NAME:$IMAGE_TAG
+                        docker push atulkr7/findinmycity:tagname
                     """
                 }
             }
