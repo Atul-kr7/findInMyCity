@@ -21,6 +21,6 @@ COPY --from=build /app/dist/find-in-my-city /usr/share/nginx/html
 # Copy custom nginx config (optional but recommended)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 4200
+EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]

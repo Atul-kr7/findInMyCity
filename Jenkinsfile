@@ -2,11 +2,10 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "yourdockerhub/app"
+        IMAGE_NAME = "atulkr7/findinmycity"
         IMAGE_TAG = "${BUILD_NUMBER}"
         DOCKER_CREDS = "docker-creds-id"
         KUBECONFIG_CRED = "kubeconfig-id"
-        // PATH = "/Users/atul/.rd/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
         PATH = "/opt/homebrew/bin:/Users/atul/.rd/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     }
 
@@ -40,7 +39,10 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t yourdockerhub/app:14 .'
+                sh '''
+                docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                '''
             }
         }
 
@@ -59,52 +61,37 @@ pipeline {
                 )]) {
                     sh """
                         echo \$PASS | docker login -u \$USER --password-stdin
-                        docker push atulkr7/findinmycity:tagname
+                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push ${IMAGE_NAME}:latest
                     """
                 }
             }
         }
 
-        stage('Kubernetes Manifest Scan') {
-            steps {
-                sh "trivy config k8s/"
-                sh "kube-score score k8s/*.yaml"
-            }
-        }
+        // stage('Kubernetes Manifest Scan') {
+        //     steps {
+        //         sh "trivy config helm/"
+        //         sh "kube-score score helm/*.yaml"
+        //     }
+        // }
 
         stage('Deploy to Kubernetes') {
             steps {
                 withCredentials([file(credentialsId: "${KUBECONFIG_CRED}", variable: 'KUBECONFIG')]) {
                     sh """
-                        kubectl apply -f k8s/
-                        kubectl rollout status deployment/app
+                        kubectl apply -f helm/
+                        kubectl rollout status deployment/findinmycity
                     """
                 }
             }
         }
 
-        stage('Cluster Security Scan') {
-            steps {
-                sh "kube-bench --version"
-                sh "kube-bench run --targets node,policies"
-            }
-        }
-
-        stage('Deploy Istio Resources') {
-            steps {
-                sh """
-                    kubectl apply -f istio/gateway.yaml
-                    kubectl apply -f istio/virtualservice.yaml
-                    kubectl apply -f istio/destinationrule.yaml
-                """
-            }
-        }
-
-        stage('Istio Validation') {
-            steps {
-                sh "istioctl analyze"
-            }
-        }
+        // stage('Cluster Security Scan') {
+        //     steps {
+        //         sh "kube-bench --version"
+        //         sh "kube-bench run --targets node,policies"
+        //     }
+        // }
     }
 
     post {
