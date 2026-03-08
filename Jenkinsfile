@@ -83,9 +83,12 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: "${KUBECONFIG_CRED}", variable: 'KUBECONFIG')]) {
                     sh """
+                        export KUBECONFIG=$KUBECONFIG
+                        kubectl cluster-info
+                        kubectl config current-context
+                        kubectl get nodes
                         kubectl apply -f helm/
                         kubectl rollout status deployment/findinmycity --timeout=2m
-                        kubectl get pods -l app=findinmycity
                     """
                 }
             }
