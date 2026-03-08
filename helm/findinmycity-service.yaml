@@ -8,6 +8,6 @@ spec:
     app: findinmycity
   ports:
     - port: 80          # Service port (what users hit)
-      targetPort: 4200  # Container port (Angular app)
+      targetPort: 80    # Container port (nginx)
       nodePort: 30080   # Node port (external access)
       

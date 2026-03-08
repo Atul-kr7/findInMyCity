@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: findinmycity
-          image: findinmycity-app:latest
+          image: atulkr7/findinmycity:latest
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 4200
+            - containerPort: 80
