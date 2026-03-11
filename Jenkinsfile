@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "atulkr7/findinmycity"
         IMAGE_TAG = "${BUILD_NUMBER}"
-        DOCKER_CREDS = "docker-creds-id"
+        DOCKER_CREDS = "dockerhub-creds"
         KUBECONFIG_CRED = "kubeconfig-id"
         PATH = "/opt/homebrew/bin:/Users/atul/.rd/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     }
