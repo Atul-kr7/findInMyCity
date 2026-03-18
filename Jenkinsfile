@@ -112,6 +112,16 @@ pipeline {
         //         sh "kube-bench run --targets node,policies"
         //     }
         // }
+        stage('Terraform Deploy') {
+            steps {
+                dir('terraform') {
+                    sh '''
+                    terraform init
+                    terraform apply -auto-approve
+                    '''
+                }
+            }
+        }
     }
 
     post {
