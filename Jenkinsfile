@@ -6,18 +6,22 @@ pipeline {
         IMAGE_TAG = "${BUILD_NUMBER}"
         DOCKER_CREDS = "dockerhub-creds"
         KUBECONFIG_CRED = "kubeconfig-id"
+
+        ARTIFACTORY_URL = "http://localhost:8082/artifactory/api/npm/npm-local/"
+        ARTIFACTORY_CREDS = "artifactory-creds"
+
         PATH = "/opt/homebrew/bin:/Users/atul/.rd/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     }
 
     stages {
 
-        stage('SOURCE') {
+        stage('Checkout Source') {
             steps {
                 checkout scm
             }
         }
 
-        stage('BUILD') {
+        stage('Build Application') {
             steps {
                 sh '''
                 export PATH=/opt/homebrew/bin:$PATH
@@ -28,14 +32,6 @@ pipeline {
             }
         }
 
-        // stage('TEST') {
-        //     steps {
-        //         sh '''
-        //         export PATH=/opt/homebrew/bin:$PATH
-        //         npm test
-        //         '''
-        //     }
-        // }
         stage('SonarQube Analysis') {
             steps {
                 script {
@@ -49,6 +45,26 @@ pipeline {
             }
         }
 
+        stage('Publish to Artifactory') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: "${ARTIFACTORY_CREDS}",
+                    usernameVariable: 'ART_USER',
+                    passwordVariable: 'ART_PASS'
+                )]) {
+                    sh '''
+                    npm config set registry ${ARTIFACTORY_URL}
+                    npm login --registry=${ARTIFACTORY_URL} <<EOF
+                    $ART_USER
+                    $ART_PASS
+                    email@example.com
+                    EOF
+                    npm publish
+                    '''
+                }
+            }
+        }
+
         stage('Docker Build') {
             steps {
                 sh '''
@@ -58,60 +74,38 @@ pipeline {
             }
         }
 
-        // stage('Container Image Scan') {
-        //     steps {
-        //         sh 'trivy image --severity HIGH,CRITICAL findinmycity:5.0'
-        //     }
-        // }
-
-        stage('Push Image') {
+        stage('Push Image to DockerHub') {
             steps {
-                script {
-                    withCredentials([usernamePassword(
-                        credentialsId: "${DOCKER_CREDS}",
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )]) {
-                        sh '''
-                            set +x
-                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                            set -x
-                            docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                            docker push ${IMAGE_NAME}:latest
-                        '''
-                    }
+                withCredentials([usernamePassword(
+                    credentialsId: "${DOCKER_CREDS}",
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    set +x
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    set -x
+                    docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                    docker push ${IMAGE_NAME}:latest
+                    '''
                 }
             }
         }
-
-        // stage('Kubernetes Manifest Scan') {
-        //     steps {
-        //         sh "trivy config helm/"
-        //         sh "kube-score score helm/*.yaml"
-        //     }
-        // }
 
         stage('Deploy to Kubernetes') {
             steps {
                 withCredentials([file(credentialsId: "${KUBECONFIG_CRED}", variable: 'KUBECONFIG')]) {
                     sh """
-                        export KUBECONFIG=$KUBECONFIG
-                        kubectl cluster-info
-                        kubectl config current-context
-                        kubectl get nodes
-                        kubectl apply -f helm/
-                        kubectl rollout status deployment/findinmycity --timeout=2m
+                    export KUBECONFIG=$KUBECONFIG
+                    kubectl cluster-info
+                    kubectl get nodes
+                    kubectl apply -f helm/
+                    kubectl rollout status deployment/findinmycity --timeout=2m
                     """
                 }
             }
         }
 
-        // stage('Cluster Security Scan') {
-        //     steps {
-        //         sh "kube-bench --version"
-        //         sh "kube-bench run --targets node,policies"
-        //     }
-        // }
         stage('Terraform Deploy') {
             steps {
                 dir('terraform') {
@@ -126,7 +120,7 @@ pipeline {
 
     post {
         success {
-            echo "Application deployed successfully with Kubernetes + Istio 🚀"
+            echo "Application deployed successfully 🚀"
         }
         failure {
             echo "Pipeline failed ❌"
